@@ -13,6 +13,8 @@ import About from "./pages/About";
 import Contact from "./pages/Contact";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsOfService from "./pages/TermsOfService";
+import UserProfile from "./pages/UserProfile";
+import Wishlist from "./pages/Wishlist";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Checkout from "./pages/Checkout";
@@ -27,7 +29,9 @@ import OrderManagement from "./pages/admin/OrderManagement";
 import CustomersManagement from "./pages/admin/CustomersManagement";
 import UploadsManagement from "./pages/admin/UploadsManagement";
 import SettingsManagement from "./pages/admin/SettingsManagement";
+import Error from "./pages/Error";
 import NotFound from "./pages/NotFound";
+import { ErrorBoundary } from "@/components/ErrorHandling";
 
 const queryClient = new QueryClient();
 
@@ -36,9 +40,10 @@ const App = () => (
     <HelmetProvider>
       <AuthProvider>
         <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
+          <ErrorBoundary>
+            <Toaster />
+            <Sonner />
+            <BrowserRouter>
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/search" element={<SearchResults />} />
@@ -65,6 +70,16 @@ const App = () => (
                 <MyOrders />
               </ProtectedRoute>
             } />
+            <Route path="/profile" element={
+              <ProtectedRoute>
+                <UserProfile />
+              </ProtectedRoute>
+            } />
+            <Route path="/wishlist" element={
+              <ProtectedRoute>
+                <Wishlist />
+              </ProtectedRoute>
+            } />
             
             {/* Admin Login */}
             <Route path="/admin/login" element={<AdminLogin />} />
@@ -86,13 +101,17 @@ const App = () => (
               <Route path="settings" element={<SettingsManagement />} />
             </Route>
 
+            {/* Error Route */}
+            <Route path="/error" element={<Error />} />
+
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
-      </TooltipProvider>
-    </AuthProvider>
-  </HelmetProvider>
+          </ErrorBoundary>
+        </TooltipProvider>
+      </AuthProvider>
+    </HelmetProvider>
   </QueryClientProvider>
 );
 

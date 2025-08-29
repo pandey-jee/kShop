@@ -1,4 +1,4 @@
-import { ShoppingCart, MessageCircle, Instagram, Search, Menu, User, LogOut, Package } from "lucide-react";
+import { ShoppingCart, MessageCircle, Instagram, Search, Menu, User, LogOut, Package, Heart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -153,9 +153,17 @@ const Header = ({ cartItemCount, onCartClick, onSearch }: HeaderProps) => {
                 <DropdownMenuContent align="end">
                   <DropdownMenuLabel>My Account</DropdownMenuLabel>
                   <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => navigate('/profile')}>
+                    <User className="mr-2 h-4 w-4" />
+                    My Profile
+                  </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => navigate('/orders')}>
                     <Package className="mr-2 h-4 w-4" />
                     My Orders
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => navigate('/wishlist')}>
+                    <Heart className="mr-2 h-4 w-4" />
+                    Wishlist
                   </DropdownMenuItem>
                   {isAdmin && (
                     <DropdownMenuItem onClick={() => navigate('/admin')}>
