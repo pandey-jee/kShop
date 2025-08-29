@@ -87,7 +87,7 @@ const AdminLogin = () => {
                   required
                   value={formData.email}
                   onChange={handleInputChange}
-                  placeholder="admin@example.com"
+                  placeholder="Enter admin email"
                   className="mt-1"
                 />
               </div>
@@ -133,7 +133,7 @@ const AdminLogin = () => {
           <div className="flex">
             <div className="ml-3">
               <h3 className="text-sm font-medium text-blue-800">
-                Demo Admin Credentials
+                Admin Credentials
               </h3>
               <div className="mt-2 text-sm text-blue-700">
                 <p>Email: admin@panditji.com</p>

@@ -258,7 +258,7 @@ const ProductsManagement: React.FC = () => {
                     id="image"
                     value={formData.image}
                     onChange={(e) => setFormData({...formData, image: e.target.value})}
-                    placeholder="https://example.com/image.jpg"
+                    placeholder="https://your-domain.com/images/product.jpg"
                   />
                 </div>
               </div>

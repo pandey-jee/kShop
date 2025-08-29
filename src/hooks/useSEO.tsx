@@ -19,7 +19,7 @@ const useSEO = ({
   canonical,
   ogTitle,
   ogDescription,
-  ogImage = '/placeholder.svg',
+  ogImage = 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=1200&h=630&fit=crop',
   ogType = 'website',
   structuredData
 }: SEOProps = {}) => {

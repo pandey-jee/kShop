@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "@/hooks/use-toast";
+import { AutoFallbackImage } from "@/components/ui/AutoFallbackImage";
 import { 
   Heart, 
   ShoppingCart, 
@@ -219,8 +220,8 @@ const Wishlist = () => {
               <Card key={item._id} className="group hover:shadow-lg transition-shadow">
                 <CardHeader className="p-0">
                   <div className="relative aspect-square overflow-hidden rounded-t-lg">
-                    <img
-                      src={item.product.image || '/placeholder.svg'}
+                    <AutoFallbackImage
+                      src={item.product.image}
                       alt={item.product.name}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                     />

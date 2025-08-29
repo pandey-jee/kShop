@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import LazyImage from '@/components/LazyImage';
+import { AutoFallbackImage } from '@/components/ui/AutoFallbackImage';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/components/ui/use-toast';
 import api from '@/lib/api';
@@ -270,8 +271,8 @@ function ProductRecommendationCard({
       <CardContent className="p-4">
         <div className="relative mb-3">
           <div className="aspect-square overflow-hidden rounded-lg">
-            <LazyImage
-              src={product.images[0]?.url || '/placeholder.svg'}
+            <AutoFallbackImage
+              src={product.images[0]?.url}
               alt={product.name}
               className="w-full h-full object-cover transition-transform group-hover:scale-105"
             />

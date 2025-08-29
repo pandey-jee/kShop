@@ -7,6 +7,7 @@ import { Badge } from '../../components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '../../components/ui/dialog';
 import { Eye, Package, Truck, CheckCircle, XCircle, Phone, Mail, MapPin } from 'lucide-react';
+import { AutoFallbackImage } from '../../components/ui/AutoFallbackImage';
 import api from '../../lib/api';
 
 interface Order {
@@ -325,8 +326,8 @@ const OrderManagement = () => {
                   <div className="space-y-4">
                     {selectedOrder.orderItems.map((item, index) => (
                       <div key={index} className="flex items-center gap-4 p-3 border rounded">
-                        <img
-                          src={item.image || '/placeholder.svg'}
+                        <AutoFallbackImage
+                          src={item.image}
                           alt={item.name}
                           className="w-16 h-16 object-cover rounded"
                         />

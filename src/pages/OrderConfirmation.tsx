@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { CheckCircle, Package, MapPin, Phone, Mail } from 'lucide-react';
+import { AutoFallbackImage } from '@/components/ui/AutoFallbackImage';
 
 const OrderConfirmation = () => {
   const { orderId } = useParams();
@@ -106,8 +107,8 @@ const OrderConfirmation = () => {
               {order.orderItems.map((item: any, index: number) => (
                 <div key={index} className="flex justify-between items-center">
                   <div className="flex items-center space-x-3">
-                    <img 
-                      src={item.image || '/placeholder.svg'} 
+                    <AutoFallbackImage 
+                      src={item.image} 
                       alt={item.name}
                       className="w-12 h-12 object-cover rounded"
                     />

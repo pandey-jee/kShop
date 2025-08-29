@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Package, Clock, CheckCircle, Truck, MapPin } from 'lucide-react';
+import { AutoFallbackImage } from '@/components/ui/AutoFallbackImage';
 import api from '@/lib/api';
 
 interface Order {
@@ -160,8 +161,8 @@ const MyOrders = () => {
                     <div className="space-y-3">
                       {order.orderItems.map((item, index) => (
                         <div key={index} className="flex items-center space-x-3">
-                          <img 
-                            src={item.image || '/placeholder.svg'} 
+                          <AutoFallbackImage 
+                            src={item.image} 
                             alt={item.name}
                             className="w-12 h-12 object-cover rounded"
                           />
