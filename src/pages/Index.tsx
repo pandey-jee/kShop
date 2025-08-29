@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Header from "@/components/Header";
 import Hero from "@/components/Hero";
 import TrustedBrands from "@/components/TrustedBrands";
@@ -31,6 +31,29 @@ const Index = () => {
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const { toast } = useToast();
+
+  // Load cart items from localStorage on component mount
+  useEffect(() => {
+    const savedCartItems = localStorage.getItem('cartItems');
+    if (savedCartItems) {
+      try {
+        const parsedItems = JSON.parse(savedCartItems);
+        setCartItems(parsedItems);
+      } catch (error) {
+        console.error('Failed to parse cart items from localStorage:', error);
+        localStorage.removeItem('cartItems');
+      }
+    }
+  }, []);
+
+  // Save cart items to localStorage whenever cart changes
+  useEffect(() => {
+    if (cartItems.length > 0) {
+      localStorage.setItem('cartItems', JSON.stringify(cartItems));
+    } else {
+      localStorage.removeItem('cartItems');
+    }
+  }, [cartItems]);
 
   const handleAddToCart = (product: Product) => {
     setCartItems(prevItems => {

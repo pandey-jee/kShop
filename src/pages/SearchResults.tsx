@@ -35,6 +35,29 @@ const SearchResults = () => {
   const [isCartOpen, setIsCartOpen] = useState(false);
   const { toast } = useToast();
 
+  // Load cart items from localStorage on component mount
+  useEffect(() => {
+    const savedCartItems = localStorage.getItem('cartItems');
+    if (savedCartItems) {
+      try {
+        const parsedItems = JSON.parse(savedCartItems);
+        setCartItems(parsedItems);
+      } catch (error) {
+        console.error('Failed to parse cart items from localStorage:', error);
+        localStorage.removeItem('cartItems');
+      }
+    }
+  }, []);
+
+  // Save cart items to localStorage whenever cart changes
+  useEffect(() => {
+    if (cartItems.length > 0) {
+      localStorage.setItem('cartItems', JSON.stringify(cartItems));
+    } else {
+      localStorage.removeItem('cartItems');
+    }
+  }, [cartItems]);
+
   useEffect(() => {
     if (query) {
       searchProducts(query);

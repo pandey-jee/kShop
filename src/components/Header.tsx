@@ -81,6 +81,14 @@ const Header = ({ cartItemCount, onCartClick, onSearch }: HeaderProps) => {
             <NavigationMenu>
               <NavigationMenuList>
                 <NavigationMenuItem>
+                  <NavigationMenuLink
+                    onClick={() => navigate('/')}
+                    className="text-sm font-medium cursor-pointer hover:text-automotive transition-colors"
+                  >
+                    Home
+                  </NavigationMenuLink>
+                </NavigationMenuItem>
+                <NavigationMenuItem>
                   <NavigationMenuTrigger className="text-sm font-medium">
                     Shop Categories
                   </NavigationMenuTrigger>
@@ -98,6 +106,22 @@ const Header = ({ cartItemCount, onCartClick, onSearch }: HeaderProps) => {
                       ))}
                     </div>
                   </NavigationMenuContent>
+                </NavigationMenuItem>
+                <NavigationMenuItem>
+                  <NavigationMenuLink
+                    onClick={() => navigate('/about')}
+                    className="text-sm font-medium cursor-pointer hover:text-automotive transition-colors"
+                  >
+                    About
+                  </NavigationMenuLink>
+                </NavigationMenuItem>
+                <NavigationMenuItem>
+                  <NavigationMenuLink
+                    onClick={() => navigate('/contact')}
+                    className="text-sm font-medium cursor-pointer hover:text-automotive transition-colors"
+                  >
+                    Contact
+                  </NavigationMenuLink>
                 </NavigationMenuItem>
               </NavigationMenuList>
             </NavigationMenu>
@@ -204,13 +228,15 @@ const Header = ({ cartItemCount, onCartClick, onSearch }: HeaderProps) => {
               <SheetContent side="right" className="w-[300px] sm:w-[400px]">
                 <div className="flex flex-col space-y-4 mt-4">
                   {/* Mobile Search */}
-                  <div className="relative">
+                  <form onSubmit={handleSearch} className="relative">
                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
                     <Input
                       placeholder="Find Parts For Vehicle"
                       className="pl-10"
+                      value={searchQuery}
+                      onChange={handleSearchInputChange}
                     />
-                  </div>
+                  </form>
 
                   {/* Mobile User Actions */}
                   {user ? (
@@ -259,6 +285,34 @@ const Header = ({ cartItemCount, onCartClick, onSearch }: HeaderProps) => {
                       </Button>
                     </div>
                   )}
+
+                  {/* Navigation Links */}
+                  <div className="border-t pt-4">
+                    <h3 className="font-semibold mb-3">Navigation</h3>
+                    <div className="space-y-2">
+                      <Button
+                        variant="ghost"
+                        className="w-full justify-start"
+                        onClick={() => navigate('/')}
+                      >
+                        Home
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        className="w-full justify-start"
+                        onClick={() => navigate('/about')}
+                      >
+                        About Us
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        className="w-full justify-start"
+                        onClick={() => navigate('/contact')}
+                      >
+                        Contact Us
+                      </Button>
+                    </div>
+                  </div>
 
                   <div className="border-t pt-4">
                     <h3 className="font-semibold mb-3">Categories</h3>

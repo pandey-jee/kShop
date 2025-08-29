@@ -116,18 +116,27 @@ const ProductUpload = () => {
         const formData = new FormData();
         formData.append('image', image);
 
-        const response = await api.post('/upload/single', formData, {
+        const response = await fetch('http://localhost:5004/api/upload/single', {
+          method: 'POST',
           headers: {
-            'Content-Type': 'multipart/form-data',
+            'Authorization': `Bearer ${localStorage.getItem('token')}`,
           },
+          body: formData,
         });
 
+        if (!response.ok) {
+          throw new Error('Failed to upload image');
+        }
+
+        const data = await response.json();
+        
         uploadedImages.push({
-          url: response.data.url,
+          url: data.data?.url || data.url,
           alt: form.name
         });
       }
     } catch (error) {
+      console.error('Image upload error:', error);
       throw new Error('Failed to upload images');
     } finally {
       setUploadingImages(false);

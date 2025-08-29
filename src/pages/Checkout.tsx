@@ -6,7 +6,11 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { ArrowLeft, MapPin, Phone, Mail } from 'lucide-react';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Badge } from '@/components/ui/badge';
+import { ArrowLeft, MapPin, Phone, Mail, CreditCard, Truck, Shield } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+import axios from 'axios';
 import api from '@/lib/api';
 
 interface CartItem {
@@ -28,10 +32,17 @@ interface ShippingAddress {
   country: string;
 }
 
+declare global {
+  interface Window {
+    Razorpay: any;
+  }
+}
+
 const Checkout = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const { toast } = useToast();
   
   // Get cart items from state or localStorage
   const cartItems: CartItem[] = location.state?.cartItems || JSON.parse(localStorage.getItem('cartItems') || '[]');
@@ -47,6 +58,7 @@ const Checkout = () => {
     country: user?.address?.country || 'India'
   });
   
+  const [paymentMethod, setPaymentMethod] = useState<'COD' | 'ONLINE'>('COD');
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Partial<ShippingAddress>>({});
 
@@ -86,6 +98,95 @@ const Checkout = () => {
     }
   };
 
+  const initializeRazorpay = () => {
+    return new Promise((resolve) => {
+      const script = document.createElement('script');
+      script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+      script.onload = () => resolve(true);
+      script.onerror = () => resolve(false);
+      document.body.appendChild(script);
+    });
+  };
+
+  const handleOnlinePayment = async (orderData: any) => {
+    const isRazorpayLoaded = await initializeRazorpay();
+    
+    if (!isRazorpayLoaded) {
+      toast({
+        title: 'Payment Error',
+        description: 'Razorpay SDK failed to load. Please try again.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    try {
+      // Create Razorpay order
+      const { data } = await api.post('/payment/create-order', {
+        amount: finalTotal,
+        currency: 'INR',
+      });
+
+      const options = {
+        key: import.meta.env.VITE_RAZORPAY_KEY_ID || 'rzp_test_9WqAlav6LSOn9O',
+        amount: data.amount,
+        currency: data.currency,
+        name: 'Panditji Auto Connect',
+        description: 'Auto Parts Purchase',
+        image: '/favicon.ico',
+        order_id: data.id,
+        handler: async (response: any) => {
+          try {
+            // Verify payment and create order
+            const verifyResponse = await api.post('/payment/verify', {
+              ...response,
+              orderData
+            });
+
+            if (verifyResponse.data.success) {
+              localStorage.removeItem('cartItems');
+              toast({
+                title: 'Payment Successful',
+                description: 'Your order has been placed successfully!',
+              });
+              navigate(`/order-confirmation/${verifyResponse.data.order._id}`, {
+                state: { order: verifyResponse.data.order }
+              });
+            }
+          } catch (error) {
+            console.error('Payment verification failed:', error);
+            toast({
+              title: 'Payment Error',
+              description: 'Payment verification failed. Please contact support.',
+              variant: 'destructive',
+            });
+          }
+        },
+        prefill: {
+          name: address.fullName,
+          email: address.email,
+          contact: address.phone,
+        },
+        notes: {
+          address: `${address.street}, ${address.city}, ${address.state} - ${address.zipCode}`,
+        },
+        theme: {
+          color: '#3399cc',
+        },
+      };
+
+      const paymentObject = new window.Razorpay(options);
+      paymentObject.open();
+    } catch (error) {
+      console.error('Payment initialization failed:', error);
+      toast({
+        title: 'Payment Error',
+        description: 'Failed to initialize payment. Please try again.',
+        variant: 'destructive',
+      });
+    }
+  };
+
   const handlePlaceOrder = async () => {
     if (!validateForm()) return;
     
@@ -98,26 +199,36 @@ const Checkout = () => {
           price: item.price
         })),
         shippingAddress: address,
-        paymentMethod: 'COD', // Cash on Delivery
+        paymentMethod,
         itemsPrice: total,
         shippingPrice: shipping,
         totalPrice: finalTotal
       };
 
-      const response = await api.post('/orders', orderData);
-      
-      if (response.data.success) {
-        // Clear cart
-        localStorage.removeItem('cartItems');
+      if (paymentMethod === 'ONLINE') {
+        await handleOnlinePayment(orderData);
+      } else {
+        // COD Order
+        const response = await api.post('/orders/cod', orderData);
         
-        // Redirect to order confirmation
-        navigate(`/order-confirmation/${response.data.data._id}`, {
-          state: { order: response.data.data }
-        });
+        if (response && response.order) {
+          localStorage.removeItem('cartItems');
+          toast({
+            title: 'Order Placed',
+            description: 'Your order has been placed successfully!',
+          });
+          navigate(`/order-confirmation/${response.order._id}`, {
+            state: { order: response.order }
+          });
+        }
       }
     } catch (error: any) {
       console.error('Order placement failed:', error);
-      // Handle error - show toast or error message
+      toast({
+        title: 'Order Failed',
+        description: error.response?.data?.message || 'Failed to place order. Please try again.',
+        variant: 'destructive',
+      });
     } finally {
       setLoading(false);
     }
@@ -147,8 +258,9 @@ const Checkout = () => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* Shipping Address Form */}
-        <div>
+        {/* Left Column */}
+        <div className="space-y-6">
+          {/* Shipping Address Form */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center">
@@ -254,11 +366,56 @@ const Checkout = () => {
               </div>
             </CardContent>
           </Card>
+
+          {/* Payment Method */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center">
+                <CreditCard className="mr-2 h-5 w-5" />
+                Payment Method
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <RadioGroup value={paymentMethod} onValueChange={(value: 'COD' | 'ONLINE') => setPaymentMethod(value)}>
+                <div className="flex items-center space-x-2 p-4 border rounded-lg hover:bg-gray-50 transition-colors">
+                  <RadioGroupItem value="COD" id="cod" />
+                  <Label htmlFor="cod" className="flex-1 cursor-pointer">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="font-medium">Cash on Delivery</p>
+                        <p className="text-sm text-gray-600">Pay when your order is delivered</p>
+                      </div>
+                      <Badge variant="secondary">
+                        <Truck className="mr-1 h-3 w-3" />
+                        COD
+                      </Badge>
+                    </div>
+                  </Label>
+                </div>
+                
+                <div className="flex items-center space-x-2 p-4 border rounded-lg hover:bg-gray-50 transition-colors">
+                  <RadioGroupItem value="ONLINE" id="online" />
+                  <Label htmlFor="online" className="flex-1 cursor-pointer">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="font-medium">Online Payment</p>
+                        <p className="text-sm text-gray-600">Secure payment via Razorpay</p>
+                      </div>
+                      <Badge variant="default" className="bg-blue-100 text-blue-800">
+                        <Shield className="mr-1 h-3 w-3" />
+                        Secure
+                      </Badge>
+                    </div>
+                  </Label>
+                </div>
+              </RadioGroup>
+            </CardContent>
+          </Card>
         </div>
 
-        {/* Order Summary */}
+        {/* Right Column - Order Summary */}
         <div>
-          <Card>
+          <Card className="sticky top-4">
             <CardHeader>
               <CardTitle>Order Summary</CardTitle>
             </CardHeader>
@@ -294,6 +451,9 @@ const Checkout = () => {
                       {shipping === 0 ? "FREE" : `₹${shipping}`}
                     </span>
                   </div>
+                  {shipping === 0 && (
+                    <p className="text-xs text-green-600">Free shipping on orders over ₹999!</p>
+                  )}
                   <Separator />
                   <div className="flex justify-between font-semibold text-lg">
                     <span>Total</span>
@@ -304,10 +464,13 @@ const Checkout = () => {
                 <div className="mt-6">
                   <div className="bg-blue-50 p-3 rounded-lg mb-4">
                     <p className="text-sm text-blue-800">
-                      <strong>Payment Method:</strong> Cash on Delivery (COD)
+                      <strong>Payment Method:</strong> {paymentMethod === 'COD' ? 'Cash on Delivery' : 'Online Payment'}
                     </p>
                     <p className="text-xs text-blue-600 mt-1">
-                      Pay when your order is delivered to your doorstep
+                      {paymentMethod === 'COD' 
+                        ? 'Pay when your order is delivered to your doorstep'
+                        : 'Secure payment powered by Razorpay'
+                      }
                     </p>
                   </div>
                   
@@ -317,7 +480,12 @@ const Checkout = () => {
                     onClick={handlePlaceOrder}
                     disabled={loading}
                   >
-                    {loading ? 'Placing Order...' : 'Place Order'}
+                    {loading 
+                      ? 'Processing...' 
+                      : paymentMethod === 'COD' 
+                        ? 'Place Order' 
+                        : `Pay ₹${finalTotal.toLocaleString()}`
+                    }
                   </Button>
                 </div>
               </div>
