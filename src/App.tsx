@@ -9,12 +9,16 @@ import ProtectedRoute from "@/components/ProtectedRoute";
 import AdminLayout from "@/components/AdminLayout";
 import Index from "./pages/Index";
 import SearchResults from "./pages/SearchResults";
+import SearchPage from "./pages/SearchPage";
+import ProductDetail from "./pages/ProductDetail";
 import About from "./pages/About";
 import Contact from "./pages/Contact";
+import FAQ from "./pages/FAQ";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsOfService from "./pages/TermsOfService";
 import UserProfile from "./pages/UserProfile";
 import Wishlist from "./pages/Wishlist";
+import Comparison from "./pages/Comparison";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Checkout from "./pages/Checkout";
@@ -29,6 +33,7 @@ import OrderManagement from "./pages/admin/OrderManagement";
 import CustomersManagement from "./pages/admin/CustomersManagement";
 import UploadsManagement from "./pages/admin/UploadsManagement";
 import SettingsManagement from "./pages/admin/SettingsManagement";
+import SearchAnalytics from "./pages/admin/SearchAnalytics";
 import Error from "./pages/Error";
 import NotFound from "./pages/NotFound";
 import { ErrorBoundary } from "@/components/ErrorHandling";
@@ -47,10 +52,14 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/search" element={<SearchResults />} />
+            <Route path="/search-advanced" element={<SearchPage />} />
+            <Route path="/product/:id" element={<ProductDetail />} />
             <Route path="/about" element={<About />} />
             <Route path="/contact" element={<Contact />} />
+            <Route path="/faq" element={<FAQ />} />
             <Route path="/privacy-policy" element={<PrivacyPolicy />} />
             <Route path="/terms-of-service" element={<TermsOfService />} />
+            <Route path="/comparison" element={<Comparison />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             
@@ -99,6 +108,7 @@ const App = () => (
               <Route path="customers" element={<CustomersManagement />} />
               <Route path="uploads" element={<UploadsManagement />} />
               <Route path="settings" element={<SettingsManagement />} />
+              <Route path="search-analytics" element={<SearchAnalytics />} />
             </Route>
 
             {/* Error Route */}

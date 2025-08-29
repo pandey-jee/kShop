@@ -6,6 +6,7 @@ import ProductGrid from "@/components/ProductGrid";
 import Cart from "@/components/Cart";
 import Footer from "@/components/Footer";
 import { useToast } from "@/hooks/use-toast";
+import useSEO from "@/hooks/useSEO";
 
 interface CartItem {
   id: string;
@@ -31,6 +32,29 @@ const Index = () => {
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const { toast } = useToast();
+
+  // SEO for homepage
+  useSEO({
+    title: 'Panditji Auto Connect - Premium Auto Parts & Accessories Online',
+    description: 'Shop genuine auto parts, car accessories, and bike parts online. Trusted by thousands with fast delivery, competitive prices, and quality guarantee.',
+    keywords: 'auto parts online, car parts, bike parts, genuine auto parts, automotive accessories, brake pads, engine oil, spare parts India',
+    canonical: 'https://pandijiautoconnect.com/',
+    ogTitle: 'Panditji Auto Connect - India\'s Premium Auto Parts Store',
+    ogDescription: 'Discover premium auto parts and accessories for all vehicle brands. Genuine quality, competitive prices, fast delivery.',
+    structuredData: {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      "name": "Panditji Auto Connect",
+      "description": "Premium auto parts and accessories online store",
+      "url": "https://pandijiautoconnect.com",
+      "logo": "https://pandijiautoconnect.com/logo.png",
+      "contactPoint": {
+        "@type": "ContactPoint",
+        "telephone": "+91-XXXXXXXXXX",
+        "contactType": "customer service"
+      }
+    }
+  });
 
   // Load cart items from localStorage on component mount
   useEffect(() => {
