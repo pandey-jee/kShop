@@ -116,17 +116,20 @@ const ProductUpload = () => {
         },
       });
       
-      if (response.data.success && response.data.data) {
+      console.log('Upload response:', response);
+      
+      // Handle the API response structure { success: true, data: { url: "..." } }
+      if (response.success && response.data && response.data.url) {
         return {
-          url: response.data.data.url,
+          url: response.data.url,
           alt: form.name
         };
       } else {
-        throw new Error(response.data.message || 'Failed to upload image');
+        throw new Error(response.message || 'Failed to upload image');
       }
     } catch (error: any) {
       console.error('Image upload error:', error);
-      throw new Error(`Failed to upload image: ${error.response?.data?.message || error.message}`);
+      throw new Error(`Failed to upload image: ${error.message || 'Unknown error'}`);
     } finally {
       setUploadingImage(false);
     }

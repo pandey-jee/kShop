@@ -75,8 +75,16 @@ const CategoryManagement = () => {
         },
       });
 
-      return response.data.url;
+      console.log('Upload response:', response);
+      
+      // Handle the API response structure { success: true, data: { url: "..." } }
+      if (response.success && response.data && response.data.url) {
+        return response.data.url;
+      } else {
+        throw new Error('Invalid response format from upload API');
+      }
     } catch (error) {
+      console.error('Upload error:', error);
       throw new Error('Failed to upload image');
     } finally {
       setUploadingImage(false);

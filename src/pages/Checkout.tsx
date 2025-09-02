@@ -34,7 +34,7 @@ interface ShippingAddress {
 
 declare global {
   interface Window {
-    Razorpay: any;
+    Cashfree: any;
   }
 }
 
@@ -98,10 +98,10 @@ const Checkout = () => {
     }
   };
 
-  const initializeRazorpay = () => {
+  const initializeCashfree = () => {
     return new Promise((resolve) => {
       const script = document.createElement('script');
-      script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+      script.src = 'https://sdk.cashfree.com/js/v3/cashfree.js';
       script.onload = () => resolve(true);
       script.onerror = () => resolve(false);
       document.body.appendChild(script);
@@ -109,84 +109,96 @@ const Checkout = () => {
   };
 
   const handleOnlinePayment = async (orderData: any) => {
-    const isRazorpayLoaded = await initializeRazorpay();
+    const isCashfreeLoaded = await initializeCashfree();
     
-    if (!isRazorpayLoaded) {
+    if (!isCashfreeLoaded) {
       toast({
         title: 'Payment Error',
-        description: 'Razorpay SDK failed to load. Please try again.',
+        description: 'Cashfree SDK failed to load. Please try again.',
         variant: 'destructive',
       });
       return;
     }
 
     try {
-      // Create Razorpay order
-      const { data } = await api.post('/payment/create-order', {
-        amount: finalTotal,
-        currency: 'INR',
-      });
-
-      const options = {
-        key: import.meta.env.VITE_RAZORPAY_KEY_ID || 'rzp_test_9WqAlav6LSOn9O',
-        amount: data.amount,
-        currency: data.currency,
-        name: 'Panditji Auto Connect',
-        description: 'Auto Parts Purchase',
-        image: '/favicon.ico',
-        order_id: data.id,
-        handler: async (response: any) => {
-          try {
-            // Verify payment and create order
-            const verifyResponse = await api.post('/payment/verify', {
-              ...response,
-              orderData
-            });
-
-            if (verifyResponse.data.success) {
-              localStorage.removeItem('cartItems');
-              toast({
-                title: 'Payment Successful',
-                description: 'Your order has been placed successfully!',
-              });
-              navigate(`/order-confirmation/${verifyResponse.data.order._id}`, {
-                state: { order: verifyResponse.data.order }
-              });
-            }
-          } catch (error) {
-            console.error('Payment verification failed:', error);
-            toast({
-              title: 'Payment Error',
-              description: 'Payment verification failed. Please contact support.',
-              variant: 'destructive',
-            });
-          }
-        },
-        prefill: {
+      // Create Cashfree order
+      const response = await api.post('/payment/create-order', {
+        amount: orderData.totalPrice,
+        customerDetails: {
           name: address.fullName,
           email: address.email,
-          contact: address.phone,
-        },
-        notes: {
-          address: `${address.street}, ${address.city}, ${address.state} - ${address.zipCode}`,
-        },
-        theme: {
-          color: '#3399cc',
-        },
-      };
+          phone: address.phone
+        }
+      });
 
-      const paymentObject = new window.Razorpay(options);
-      paymentObject.open();
-    } catch (error) {
-      console.error('Payment initialization failed:', error);
+      if (response.success) {
+        const { orderId, paymentSessionId } = response;
+        
+        // Initialize Cashfree Checkout
+        const cashfree = new (window as any).Cashfree({
+          mode: process.env.NODE_ENV === 'production' ? 'production' : 'sandbox'
+        });
+
+        const checkoutOptions = {
+          paymentSessionId: paymentSessionId,
+          returnUrl: `${window.location.origin}/payment/success`,
+          redirectTarget: '_modal' // Opens in modal
+        };
+
+        cashfree.checkout(checkoutOptions).then((result: any) => {
+          if (result.error) {
+            toast({
+              title: 'Payment Error',
+              description: result.error.message || 'Payment failed. Please try again.',
+              variant: 'destructive',
+            });
+          } else if (result.redirect) {
+            // Payment successful, verify on backend
+            handlePaymentSuccess(result, orderData);
+          }
+        });
+      }
+    } catch (error: any) {
+      console.error('Payment initiation failed:', error);
       toast({
         title: 'Payment Error',
-        description: 'Failed to initialize payment. Please try again.',
+        description: 'Failed to initiate payment. Please try again.',
         variant: 'destructive',
       });
     }
   };
 
+  const handlePaymentSuccess = async (paymentResult: any, orderData: any) => {
+    try {
+      // Verify payment with backend
+      const verifyResponse = await api.post('/payment/verify', {
+        orderId: paymentResult.orderId,
+        orderAmount: orderData.totalPrice,
+        referenceId: paymentResult.referenceId,
+        txStatus: paymentResult.txStatus,
+        paymentMode: paymentResult.paymentMode,
+        txMsg: paymentResult.txMsg,
+        txTime: paymentResult.txTime,
+        signature: paymentResult.signature,
+        orderData
+      });
+
+      if (verifyResponse.success) {
+        toast({
+          title: 'Payment Successful',
+          description: 'Your order has been placed successfully!',
+        });
+        navigate(`/order-confirmation/${verifyResponse.orderId}`);
+      }
+    } catch (error) {
+      console.error('Payment verification failed:', error);
+      toast({
+        title: 'Payment Error',
+        description: 'Payment verification failed. Please contact support.',
+        variant: 'destructive',
+      });
+    }
+  };
   const handlePlaceOrder = async () => {
     if (!validateForm()) return;
     
@@ -211,7 +223,7 @@ const Checkout = () => {
         // COD Order
         const response = await api.post('/orders/cod', orderData);
         
-        if (response && response.order) {
+        if (response.success) {
           localStorage.removeItem('cartItems');
           toast({
             title: 'Order Placed',
