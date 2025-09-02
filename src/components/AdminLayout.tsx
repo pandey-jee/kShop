@@ -8,12 +8,10 @@ import {
   Users,
   ShoppingCart,
   Tags,
-  Upload,
   Settings,
   LogOut,
   Menu,
-  X,
-  BarChart3
+  X
 } from 'lucide-react';
 
 const AdminLayout: React.FC = () => {
@@ -33,8 +31,6 @@ const AdminLayout: React.FC = () => {
     { name: 'Categories', href: '/admin/categories', icon: Tags },
     { name: 'Orders', href: '/admin/orders', icon: ShoppingCart },
     { name: 'Customers', href: '/admin/customers', icon: Users },
-    { name: 'Search Analytics', href: '/admin/search-analytics', icon: BarChart3 },
-    { name: 'Uploads', href: '/admin/uploads', icon: Upload },
     { name: 'Settings', href: '/admin/settings', icon: Settings },
   ];
 

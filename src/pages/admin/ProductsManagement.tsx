@@ -29,7 +29,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { Plus, Search, Edit, Trash2, Eye } from 'lucide-react';
-import axios from 'axios';
+import api from '@/lib/api';
 
 interface Product {
   _id: string;
@@ -53,6 +53,7 @@ const ProductsManagement: React.FC = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -76,10 +77,20 @@ const ProductsManagement: React.FC = () => {
 
   const fetchProducts = async () => {
     try {
-      const response = await axios.get('http://localhost:5004/api/products');
-      setProducts(response.data);
+      console.log('Fetching products from: /products');
+      const response = await api.get('/products');
+      console.log('Products response:', response);
+      
+      // Handle the API response structure { success: true, data: [...], pagination: {...} }
+      if (response.success && response.data) {
+        setProducts(response.data);
+      } else {
+        setProducts([]);
+      }
+      setError(null);
     } catch (error) {
       console.error('Error fetching products:', error);
+      setError('Failed to fetch products. Please check if the backend server is running.');
       toast({
         title: 'Error',
         description: 'Failed to fetch products',
@@ -92,8 +103,15 @@ const ProductsManagement: React.FC = () => {
 
   const fetchCategories = async () => {
     try {
-      const response = await axios.get('http://localhost:5004/api/categories');
-      setCategories(response.data);
+      const response = await api.get('/categories');
+      // Handle different response formats
+      if (response.success && response.data) {
+        setCategories(response.data);
+      } else if (Array.isArray(response)) {
+        setCategories(response);
+      } else {
+        setCategories([]);
+      }
     } catch (error) {
       console.error('Error fetching categories:', error);
     }
@@ -103,13 +121,15 @@ const ProductsManagement: React.FC = () => {
     e.preventDefault();
     try {
       if (editingProduct) {
-        await axios.put(`http://localhost:5004/api/products/${editingProduct._id}`, formData);
+        const response = await api.put(`/products/${editingProduct._id}`, formData);
+        console.log('Update response:', response);
         toast({
           title: 'Success',
           description: 'Product updated successfully',
         });
       } else {
-        await axios.post('http://localhost:5004/api/products', formData);
+        const response = await api.post('/products', formData);
+        console.log('Create response:', response);
         toast({
           title: 'Success',
           description: 'Product created successfully',
@@ -122,7 +142,7 @@ const ProductsManagement: React.FC = () => {
       console.error('Error saving product:', error);
       toast({
         title: 'Error',
-        description: 'Failed to save product',
+        description: error.message || 'Failed to save product',
         variant: 'destructive',
       });
     }
@@ -145,7 +165,7 @@ const ProductsManagement: React.FC = () => {
   const handleDelete = async (productId: string) => {
     if (window.confirm('Are you sure you want to delete this product?')) {
       try {
-        await axios.delete(`http://localhost:5004/api/products/${productId}`);
+        await api.delete(`/products/${productId}`);
         toast({
           title: 'Success',
           description: 'Product deleted successfully',
@@ -181,7 +201,7 @@ const ProductsManagement: React.FC = () => {
   );
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 p-6">
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold">Products Management</h1>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
@@ -301,7 +321,20 @@ const ProductsManagement: React.FC = () => {
         </CardHeader>
         <CardContent>
           {loading ? (
-            <div className="text-center py-8">Loading...</div>
+            <div className="text-center py-8">Loading products...</div>
+          ) : error ? (
+            <div className="text-center py-8">
+              <div className="text-red-600 mb-4">{error}</div>
+              <Button onClick={fetchProducts}>Retry</Button>
+            </div>
+          ) : filteredProducts.length === 0 ? (
+            <div className="text-center py-8">
+              <p className="text-gray-500 mb-4">No products found</p>
+              <Button onClick={() => {resetForm(); setIsDialogOpen(true);}}>
+                <Plus className="mr-2 h-4 w-4" />
+                Add Your First Product
+              </Button>
+            </div>
           ) : (
             <Table>
               <TableHeader>

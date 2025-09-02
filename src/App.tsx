@@ -31,9 +31,7 @@ import ProductsManagement from "./pages/admin/ProductsManagement";
 import CategoryManagement from "./pages/admin/CategoryManagement";
 import OrderManagement from "./pages/admin/OrderManagement";
 import CustomersManagement from "./pages/admin/CustomersManagement";
-import UploadsManagement from "./pages/admin/UploadsManagement";
 import SettingsManagement from "./pages/admin/SettingsManagement";
-import SearchAnalytics from "./pages/admin/SearchAnalytics";
 import Error from "./pages/Error";
 import NotFound from "./pages/NotFound";
 import { ErrorBoundary } from "@/components/ErrorHandling";
@@ -106,9 +104,7 @@ const App = () => (
               <Route path="categories" element={<CategoryManagement />} />
               <Route path="orders" element={<OrderManagement />} />
               <Route path="customers" element={<CustomersManagement />} />
-              <Route path="uploads" element={<UploadsManagement />} />
               <Route path="settings" element={<SettingsManagement />} />
-              <Route path="search-analytics" element={<SearchAnalytics />} />
             </Route>
 
             {/* Error Route */}

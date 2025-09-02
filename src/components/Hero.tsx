@@ -27,8 +27,8 @@ const Hero = () => {
             </Button>
             <Button 
               size="lg" 
-              variant="outline"
-              className="text-lg px-8 py-6 border-automotive-foreground/20 text-automotive-foreground hover:bg-automotive-foreground/10"
+              variant="secondary"
+              className="text-lg px-8 py-6 bg-white text-slate-900 border-2 border-white hover:bg-slate-100 hover:scale-105 transition-all"
             >
               View Categories
             </Button>

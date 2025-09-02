@@ -58,9 +58,9 @@ const ProductUpload = () => {
   });
 
   const [categories, setCategories] = useState<Category[]>([]);
-  const [images, setImages] = useState<File[]>([]);
-  const [imagePreview, setImagePreview] = useState<string[]>([]);
-  const [uploadingImages, setUploadingImages] = useState(false);
+  const [image, setImage] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string>('');
+  const [uploadingImage, setUploadingImage] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -85,64 +85,51 @@ const ProductUpload = () => {
   };
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files || []);
-    if (files.length > 5) {
-      setError('Maximum 5 images allowed');
-      return;
-    }
+    const file = e.target.files?.[0];
+    if (!file) return;
 
-    setImages(files);
+    setImage(file);
     
-    // Create preview URLs
-    const previews = files.map(file => URL.createObjectURL(file));
-    setImagePreview(previews);
+    // Create preview URL
+    const preview = URL.createObjectURL(file);
+    setImagePreview(preview);
   };
 
-  const removeImage = (index: number) => {
-    const newImages = images.filter((_, i) => i !== index);
-    const newPreviews = imagePreview.filter((_, i) => i !== index);
-    setImages(newImages);
-    setImagePreview(newPreviews);
+  const removeImage = () => {
+    setImage(null);
+    setImagePreview('');
   };
 
-  const uploadImages = async () => {
-    if (images.length === 0) return [];
+  const uploadImage = async () => {
+    if (!image) return null;
 
-    setUploadingImages(true);
-    const uploadedImages = [];
+    setUploadingImage(true);
+    setError('');
 
     try {
-      for (const image of images) {
-        const formData = new FormData();
-        formData.append('image', image);
+      const formData = new FormData();
+      formData.append('image', image);
 
-        const response = await fetch('http://localhost:5004/api/upload/single', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`,
-          },
-          body: formData,
-        });
-
-        if (!response.ok) {
-          throw new Error('Failed to upload image');
-        }
-
-        const data = await response.json();
-        
-        uploadedImages.push({
-          url: data.data?.url || data.url,
+      const response = await api.post('/upload/single', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+      
+      if (response.data.success && response.data.data) {
+        return {
+          url: response.data.data.url,
           alt: form.name
-        });
+        };
+      } else {
+        throw new Error(response.data.message || 'Failed to upload image');
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Image upload error:', error);
-      throw new Error('Failed to upload images');
+      throw new Error(`Failed to upload image: ${error.response?.data?.message || error.message}`);
     } finally {
-      setUploadingImages(false);
+      setUploadingImage(false);
     }
-
-    return uploadedImages;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -152,13 +139,13 @@ const ProductUpload = () => {
     setLoading(true);
 
     try {
-      // Upload images first
-      const uploadedImages = await uploadImages();
+      // Upload image first (single image)
+      const uploadedImage = await uploadImage();
 
       // Prepare product data
       const productData = {
         ...form,
-        images: uploadedImages,
+        images: uploadedImage ? [uploadedImage] : [], // Convert single image to array for compatibility
         specifications: Object.keys(form.specifications).length > 0 ? form.specifications : undefined
       };
 
@@ -186,8 +173,8 @@ const ProductUpload = () => {
           type: 'months'
         }
       });
-      setImages([]);
-      setImagePreview([]);
+      setImage(null);
+      setImagePreview('');
     } catch (error: any) {
       setError(error.message || 'Failed to upload product');
     } finally {
@@ -528,36 +515,33 @@ const ProductUpload = () => {
 
             {/* Image Upload */}
             <div className="space-y-4">
-              <Label htmlFor="images">Product Images (Max 5)</Label>
+              <Label htmlFor="image">Product Image</Label>
               <Input
-                id="images"
+                id="image"
                 type="file"
-                multiple
                 accept="image/*"
                 onChange={handleImageChange}
                 className="cursor-pointer"
               />
               
-              {imagePreview.length > 0 && (
-                <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-                  {imagePreview.map((preview, index) => (
-                    <div key={index} className="relative">
-                      <img
-                        src={preview}
-                        alt={`Preview ${index + 1}`}
-                        className="w-full h-32 object-cover rounded border"
-                      />
-                      <Button
-                        type="button"
-                        variant="destructive"
-                        size="sm"
-                        className="absolute top-1 right-1 h-6 w-6 p-0"
-                        onClick={() => removeImage(index)}
-                      >
-                        <X className="w-3 h-3" />
-                      </Button>
-                    </div>
-                  ))}
+              {imagePreview && (
+                <div className="mt-4">
+                  <div className="relative inline-block">
+                    <img
+                      src={imagePreview}
+                      alt="Preview"
+                      className="w-48 h-48 object-cover rounded border"
+                    />
+                    <Button
+                      type="button"
+                      variant="destructive"
+                      size="sm"
+                      className="absolute top-1 right-1 h-6 w-6 p-0"
+                      onClick={removeImage}
+                    >
+                      <X className="w-3 h-3" />
+                    </Button>
+                  </div>
                 </div>
               )}
             </div>
@@ -565,12 +549,12 @@ const ProductUpload = () => {
             <Button 
               type="submit" 
               className="w-full" 
-              disabled={loading || uploadingImages}
+              disabled={loading || uploadingImage}
             >
-              {loading || uploadingImages ? (
+              {loading || uploadingImage ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  {uploadingImages ? 'Uploading Images...' : 'Creating Product...'}
+                  {uploadingImage ? 'Uploading Image...' : 'Creating Product...'}
                 </>
               ) : (
                 <>

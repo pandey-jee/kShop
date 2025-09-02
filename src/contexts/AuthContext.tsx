@@ -54,12 +54,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const login = async (email: string, password: string) => {
     try {
       const response = await api.post('/auth/login', { email, password });
-      const { data } = response; // response is already unwrapped by interceptor
+      
+      // The API interceptor returns response.data, which contains { success, message, data }
+      // The actual user data is in the data field
+      const { data: userData } = response;
 
-      setUser(data);
-      setToken(data.token);
-      localStorage.setItem('token', data.token);
-      localStorage.setItem('user', JSON.stringify(data));
+      setUser(userData);
+      setToken(userData.token);
+      localStorage.setItem('token', userData.token);
+      localStorage.setItem('user', JSON.stringify(userData));
     } catch (error) {
       throw error;
     }
@@ -68,12 +71,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const register = async (name: string, email: string, password: string, phone?: string) => {
     try {
       const response = await api.post('/auth/register', { name, email, password, phone });
-      const { data } = response; // response is already unwrapped by interceptor
+      
+      // The API interceptor returns response.data, which contains { success, message, data }
+      // The actual user data is in the data field
+      const { data: userData } = response;
 
-      setUser(data);
-      setToken(data.token);
-      localStorage.setItem('token', data.token);
-      localStorage.setItem('user', JSON.stringify(data));
+      setUser(userData);
+      setToken(userData.token);
+      localStorage.setItem('token', userData.token);
+      localStorage.setItem('user', JSON.stringify(userData));
     } catch (error) {
       throw error;
     }
@@ -89,10 +95,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const updateProfile = async (userData: Partial<User>) => {
     try {
       const response = await api.put('/auth/profile', userData);
-      const { data } = response; // response is already unwrapped by interceptor
+      
+      // The API interceptor returns response.data, which contains { success, message, data }
+      // The actual user data is in the data field
+      const { data: updatedUser } = response;
 
-      setUser(data);
-      localStorage.setItem('user', JSON.stringify(data));
+      setUser(updatedUser);
+      localStorage.setItem('user', JSON.stringify(updatedUser));
     } catch (error) {
       throw error;
     }
